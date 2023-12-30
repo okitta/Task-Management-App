@@ -8,7 +8,7 @@ const profileController = require("../controllers/profileController");
 router.get(
   "/",
   authMiddleware,
-  //roleMiddleware("admin"),
+  roleMiddleware("admin"),
   profileController.getUserProfile
 );
 
