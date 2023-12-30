@@ -17,6 +17,7 @@ model User {
   email     String    @unique
   password  String  
   created_at DateTime  @default(now())
+  role      String   @default("user")
   projects  Project[] // Define the relationship with projects
   tasks     Task[]    // Define the relationship with tasks
 }
