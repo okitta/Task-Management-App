@@ -2,11 +2,12 @@ const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
+const { generateToken } = require("../utils/authUtils");
 
 const prisma = new PrismaClient();
 
 async function registerUser(req, res) {
-  const { username, email, password } = req.body;
+  const { username, email, password, role = "user" } = req.body;
 
   // Hash the password
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -18,6 +19,7 @@ async function registerUser(req, res) {
         username,
         email,
         password: hashedPassword,
+        role,
       },
     });
 
@@ -47,9 +49,7 @@ async function loginUser(req, res) {
     }
 
     // Generate JWT token
-    const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET_KEY, {
-      expiresIn: "1h",
-    });
+    const token = generateToken(user.id, user.username, user.email, user.role);
 
     // Respond with the generated token
     res.json({ token });
@@ -59,4 +59,42 @@ async function loginUser(req, res) {
   }
 }
 
-module.exports = { registerUser, loginUser };
+// Validate user registration data
+const validateUserRegistration = (req, res, next) => {
+  const { username, email, password } = req.body;
+
+  // Check if required fields are present
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "All fields are required" });
+  }
+
+  // Validate username and email uniqueness
+  prisma.user
+    .findMany({
+      where: {
+        OR: [{ username }, { email }],
+      },
+    })
+    .then((existingUsers) => {
+      const duplicateUsername = existingUsers.some(
+        (user) => user.username === username
+      );
+      const duplicateEmail = existingUsers.some((user) => user.email === email);
+
+      if (duplicateUsername) {
+        return res.status(400).json({ error: "Username is already taken" });
+      }
+
+      if (duplicateEmail) {
+        return res.status(400).json({ error: "Email is already taken" });
+      }
+
+      next();
+    })
+    .catch((error) => {
+      console.error("Error validating user registration:", error);
+      res.status(500).json({ error: "Internal Server Error" });
+    });
+};
+
+module.exports = { registerUser, loginUser, validateUserRegistration };
