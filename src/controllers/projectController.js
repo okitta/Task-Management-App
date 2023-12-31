@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
 
+// Get list of Projects of the current user
 async function getAllProjects(req, res) {
   try {
     const { search, user_id } = req.query;
@@ -28,6 +29,9 @@ async function getAllProjects(req, res) {
         ...baseFilter,
         ...searchFilter,
       },
+      include: {
+        projectMembers: true,
+      },
     });
 
     res.json(projects);
@@ -37,6 +41,7 @@ async function getAllProjects(req, res) {
   }
 }
 
+// Create a new project
 async function createProject(req, res) {
   const { name, description } = req.body;
 
@@ -70,6 +75,7 @@ async function createProject(req, res) {
   }
 }
 
+// Fetches the project by its id
 async function getProjectById(req, res) {
   const projectId = parseInt(req.params.projectId, 10);
 
@@ -99,6 +105,7 @@ async function getProjectById(req, res) {
   }
 }
 
+// Update project by its id
 async function updateProjectById(req, res) {
   const projectId = parseInt(req.params.projectId, 10);
   const { name, description } = req.body;
@@ -127,6 +134,7 @@ async function updateProjectById(req, res) {
   }
 }
 
+// Delete project by its id
 async function deleteProjectById(req, res) {
   const projectId = parseInt(req.params.projectId, 10);
 
@@ -151,8 +159,65 @@ async function deleteProjectById(req, res) {
   }
 }
 
+// Add a member to a project
+async function addMemberToProject(req, res) {
+  const { projectId } = req.params;
+  const { userId } = req.body;
+
+  try {
+    // Check if the user is already a member of the project
+    const existingMember = await prisma.projectMembers.findFirst({
+      where: {
+        project_id: Number(projectId),
+        user_id: Number(userId),
+      },
+    });
+
+    if (existingMember) {
+      return res
+        .status(400)
+        .json({ error: "User is already a member of the project" });
+    }
+
+    // Add the user as a member of the project
+    await prisma.projectMembers.create({
+      data: {
+        project_id: Number(projectId),
+        user_id: Number(userId),
+      },
+    });
+
+    res.status(201).json({ message: "User added to the project successfully" });
+  } catch (error) {
+    console.error("Error adding member to project:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
+// Remove a member from a project
+async function removeMemberFromProject(req, res) {
+  const { projectId, userId } = req.params;
+
+  try {
+    // Remove the user from the project
+    await prisma.projectMembers.deleteMany({
+      where: {
+        project_id: Number(projectId),
+        user_id: Number(userId),
+      },
+    });
+
+    res
+      .status(200)
+      .json({ message: "User removed from the project successfully" });
+  } catch (error) {
+    console.error("Error removing member from project:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 // Validate project creation data
-const validateProjectCreation = (req, res, next) => {
+function validateProjectCreation(req, res, next) {
   const { name } = req.body;
 
   // Check if required fields are present
@@ -161,7 +226,7 @@ const validateProjectCreation = (req, res, next) => {
   }
 
   next();
-};
+}
 
 module.exports = {
   getAllProjects,
@@ -170,4 +235,6 @@ module.exports = {
   updateProjectById,
   deleteProjectById,
   validateProjectCreation,
+  addMemberToProject,
+  removeMemberFromProject,
 };

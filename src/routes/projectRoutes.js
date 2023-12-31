@@ -56,4 +56,20 @@ router.post(
   taskController.validateTaskCreation,
   taskController.createTask
 );
+
+// Add members from a project route
+router.post(
+  "/:projectId/members",
+  authMiddleware,
+  roleMiddleware("admin"),
+  projectController.addMemberToProject
+);
+
+// remove members from a project route
+router.delete(
+  "/:projectId/members/:userId",
+  authMiddleware,
+  roleMiddleware("admin"),
+  projectController.removeMemberFromProject
+);
 module.exports = router;

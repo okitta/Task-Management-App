@@ -12,39 +12,51 @@ datasource db {
 
 // Define the User model
 model User {
-  id        Int       @id @default(autoincrement())
-  username  String    @unique
-  email     String    @unique
-  password  String  
-  created_at DateTime  @default(now())
-  role      String   @default("user")
-  projects  Project[] // Define the relationship with projects
-  tasks     Task[]    // Define the relationship with tasks
+  id             Int              @id @default(autoincrement())
+  username       String           @unique
+  email          String           @unique
+  password       String
+  created_at     DateTime         @default(now())
+  role           String           @default("user")
+  ownedProjects  Project[]
+  projectMembers ProjectMembers[]
+  tasks          Task[] 
 }
 
 // Define the Project model
 model Project {
-  id          Int      @id @default(autoincrement())
-  name        String
-  description String
-  created_at  DateTime @default(now())
-  tasks       Task[]   // Define the relationship with tasks
-  user        User     @relation(fields: [user_id], references: [id])
-  user_id     Int
+  id             Int              @id @default(autoincrement())
+  name           String
+  description    String
+  created_at     DateTime         @default(now())
+  projectMembers ProjectMembers[]
+  tasks          Task[] // Define the relationship with tasks
+  user           User             @relation(fields: [user_id], references: [id])
+  user_id        Int
+}
+
+// Define the intermediate table for the many-to-many relationship
+model ProjectMembers {
+  user       User    @relation(fields: [user_id], references: [id])
+  user_id    Int
+  project    Project @relation(fields: [project_id], references: [id])
+  project_id Int
+
+  @@id([user_id, project_id])
 }
 
 // Define the Task model
 model Task {
-  id         Int        @id @default(autoincrement())
-  title      String
+  id          Int          @id @default(autoincrement())
+  title       String
   description String?
-  due_date   DateTime?
-  completed  Boolean    @default(false)
-  project_id Int
-  user_id    Int
-  created_at DateTime   @default(now())
-  user       User       @relation(fields: [user_id], references: [id])
-  project    Project    @relation(fields: [project_id], references: [id])
+  due_date    DateTime?
+  completed   Boolean      @default(false)
+  project_id  Int
+  user_id     Int
+  created_at  DateTime     @default(now())
+  user        User         @relation(fields: [user_id], references: [id])
+  project     Project      @relation(fields: [project_id], references: [id])
   attachments Attachment[]
 }
 
@@ -58,4 +70,3 @@ model Attachment {
   created_at   DateTime @default(now())
   task         Task     @relation(fields: [task_id], references: [id])
 }
-
