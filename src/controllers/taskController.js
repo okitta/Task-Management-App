@@ -1,27 +1,44 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
+const {
+  uploadAttachment,
+  getAttachmentById,
+  deleteAttachmentById,
+} = require("./fileController");
 
 // Fetch all tasks for a specific project
 const getAllTasksForProject = async (req, res) => {
   try {
     const { projectId } = req.params;
+    const { search, completed } = req.query;
 
-    // Check if user is an admin and a user_id is provided in the query parameters
-    if (req.user.role === "admin" && req.query.user_id) {
-      const tasks = await prisma.task.findMany({
-        where: {
-          project_id: Number(projectId),
-          user_id: parseInt(req.query.user_id, 10),
-        },
-      });
-      res.status(200).json(tasks);
-    } else {
-      // Fetch all tasks for the authenticated user within the project
-      const tasks = await prisma.task.findMany({
-        where: { project_id: Number(projectId), user_id: req.user.id },
-      });
-      res.status(200).json(tasks);
-    }
+    // Define the base filter based on the completed status
+    const baseFilter = {
+      ...(completed ? { completed: completed === "true" } : {}),
+      ...(req.user.role === "admin" && user_id
+        ? { user_id: parseInt(user_id, 10) }
+        : { user_id: req.user.id }),
+    };
+
+    // Add search condition if a search term is provided
+    const searchFilter = search
+      ? {
+          OR: [
+            { title: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {};
+
+    const tasks = await prisma.task.findMany({
+      where: {
+        project_id: Number(projectId),
+        ...baseFilter,
+        ...searchFilter,
+      },
+    });
+
+    res.status(200).json(tasks);
   } catch (error) {
     console.error("Error fetching tasks:", error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -175,4 +192,7 @@ module.exports = {
   updateTaskById,
   deleteTaskById,
   validateTaskCreation,
+  uploadAttachment,
+  getAttachmentById,
+  deleteAttachmentById,
 };

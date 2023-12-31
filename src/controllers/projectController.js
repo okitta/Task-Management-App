@@ -4,19 +4,33 @@ const prisma = new PrismaClient();
 
 async function getAllProjects(req, res) {
   try {
-    // Check if user is an admin and a user_id is provided in the query parameters
-    if (req.user.role === "admin" && req.query.user_id) {
-      const projects = await prisma.project.findMany({
-        where: { user_id: parseInt(req.query.user_id, 10) },
-      });
-      res.json(projects);
-    } else {
-      // Fetch all projects for the authenticated user
-      const projects = await prisma.project.findMany({
-        where: { user_id: req.user.id },
-      });
-      res.json(projects);
-    }
+    const { search, user_id } = req.query;
+
+    // Define the base filter based on the user's role and user_id (if provided)
+    const baseFilter = {
+      ...(req.user.role === "admin" && user_id
+        ? { user_id: parseInt(user_id, 10) }
+        : { user_id: req.user.id }),
+    };
+
+    // Add search condition if a search term is provided
+    const searchFilter = search
+      ? {
+          OR: [
+            { name: { contains: search, mode: "insensitive" } },
+            { description: { contains: search, mode: "insensitive" } },
+          ],
+        }
+      : {};
+
+    const projects = await prisma.project.findMany({
+      where: {
+        ...baseFilter,
+        ...searchFilter,
+      },
+    });
+
+    res.json(projects);
   } catch (error) {
     console.error("Error fetching projects:", error);
     res.status(500).json({ error: "Internal Server Error" });

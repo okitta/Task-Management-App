@@ -16,23 +16,6 @@ router.post(
   projectController.createProject
 );
 
-// Fetch all tasks for a specific project route
-router.get(
-  "/:projectId/tasks",
-  authMiddleware,
-  roleMiddleware("admin"),
-  taskController.getAllTasksForProject
-);
-
-// Create a new task within a project route
-router.post(
-  "/:projectId/tasks",
-  authMiddleware,
-  roleMiddleware("admin"),
-  taskController.validateTaskCreation,
-  taskController.createTask
-);
-
 // Fetch a specific project by ID route
 router.get(
   "/:projectId",
@@ -57,4 +40,20 @@ router.delete(
   projectController.deleteProjectById
 );
 
+// Fetch all tasks for a specific project route
+router.get(
+  "/:projectId/tasks",
+  authMiddleware,
+  roleMiddleware("admin"),
+  taskController.getAllTasksForProject
+);
+
+// Create a new task within a project route
+router.post(
+  "/:projectId/tasks",
+  authMiddleware,
+  roleMiddleware("admin"),
+  taskController.validateTaskCreation,
+  taskController.createTask
+);
 module.exports = router;

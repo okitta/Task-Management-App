@@ -35,14 +35,27 @@ model Project {
 
 // Define the Task model
 model Task {
-  id          Int      @id @default(autoincrement())
-  title       String
-  description String
-  due_date    DateTime
-  completed   Boolean  @default(false)
-  project     Project  @relation(fields: [project_id], references: [id])
-  project_id  Int
-  user        User     @relation(fields: [user_id], references: [id])
-  user_id     Int
-  created_at  DateTime @default(now())
+  id         Int        @id @default(autoincrement())
+  title      String
+  description String?
+  due_date   DateTime?
+  completed  Boolean    @default(false)
+  project_id Int
+  user_id    Int
+  created_at DateTime   @default(now())
+  user       User       @relation(fields: [user_id], references: [id])
+  project    Project    @relation(fields: [project_id], references: [id])
+  attachments Attachment[]
 }
+
+// Define the Attachment model
+model Attachment {
+  id           Int      @id @default(autoincrement())
+  originalname String
+  filename     String
+  path         String
+  task_id      Int
+  created_at   DateTime @default(now())
+  task         Task     @relation(fields: [task_id], references: [id])
+}
+

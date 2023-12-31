@@ -3,6 +3,7 @@ const router = express.Router();
 const taskController = require("../controllers/taskController");
 const authMiddleware = require("../middlewares/authMiddleware");
 const roleMiddleware = require("../middlewares/roleMiddleware");
+const attachmentMiddleware = require("../middlewares/attachmentMiddleware");
 
 // Fetch a specific task by ID route
 router.get(
@@ -26,6 +27,28 @@ router.delete(
   authMiddleware,
   roleMiddleware("admin"),
   taskController.deleteTaskById
+);
+
+// Upload attachment to a specific task route
+router.post(
+  "/:taskId/attachments",
+  authMiddleware,
+  attachmentMiddleware,
+  taskController.uploadAttachment
+);
+
+// Get a specific attachment for a specific task route
+router.get(
+  "/:taskId/attachments/:attachmentId",
+  authMiddleware,
+  taskController.getAttachmentById
+);
+
+// Delete a specific attachment for a specific task route
+router.delete(
+  "/:taskId/attachments/:attachmentId",
+  authMiddleware,
+  taskController.deleteAttachmentById
 );
 
 module.exports = router;
