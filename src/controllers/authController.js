@@ -6,6 +6,17 @@ const { generateToken } = require("../utils/authUtils");
 
 const prisma = new PrismaClient();
 
+//Temp: Get list of users
+async function getUsers(req, res) {
+  try {
+    const users = await prisma.user.findMany();
+    res.status(200).json(users);
+  } catch (error) {
+    console.error("Error fetching users:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+}
+
 async function registerUser(req, res) {
   const { username, email, password, role = "user" } = req.body;
 
@@ -97,4 +108,9 @@ const validateUserRegistration = (req, res, next) => {
     });
 };
 
-module.exports = { registerUser, loginUser, validateUserRegistration };
+module.exports = {
+  registerUser,
+  loginUser,
+  validateUserRegistration,
+  getUsers,
+};

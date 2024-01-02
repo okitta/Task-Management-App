@@ -51,4 +51,20 @@ router.delete(
   taskController.deleteAttachmentById
 );
 
+// Assign a task to a user
+router.put(
+  "/:taskId/assign",
+  authMiddleware,
+  roleMiddleware("admin"), // Assuming only admins can assign tasks
+  taskController.assignTask
+);
+
+// Unassign a task from a user
+router.put(
+  "/:taskId/unassign",
+  authMiddleware,
+  roleMiddleware("admin"), // Assuming only admins can unassign tasks
+  taskController.unassignTask
+);
+
 module.exports = router;

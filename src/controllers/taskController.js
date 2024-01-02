@@ -124,6 +124,7 @@ const updateTaskById = async (req, res) => {
   try {
     const { taskId } = req.params;
     const { title, description, due_date, completed } = req.body;
+    const io = req.app.get("socketio");
 
     // Check if user is an admin and a user_id is provided in the query parameters
     if (req.user.role === "admin" && req.query.user_id) {
@@ -139,6 +140,9 @@ const updateTaskById = async (req, res) => {
         where: { id: Number(taskId), user_id: req.user.id },
         data: { title, description, due_date: new Date(due_date), completed },
       });
+
+      // Notify the user that the task has been updated
+      io.emit("taskUpdated", { taskId });
 
       res.status(200).json(updatedTask);
     }
@@ -173,6 +177,67 @@ const deleteTaskById = async (req, res) => {
   }
 };
 
+// Assign a task to a user
+const assignTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+    const { userId } = req.body;
+    const io = req.app.get("socketio");
+    // Validate project membership
+    const project = await prisma.project.findUnique({
+      where: {
+        id: (
+          await prisma.task.findUnique({ where: { id: Number(taskId) } })
+        ).project_id,
+        projectMembers: {
+          some: {
+            user_id: Number(userId),
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      return res
+        .status(400)
+        .json({ error: "User is not a member of the project" });
+    }
+
+    // Assign the task
+    const updatedTask = await prisma.task.update({
+      where: { id: Number(taskId) },
+      data: { assignedUserId: Number(userId) },
+    });
+
+    // Notify the user that the task has been assigned to the user itself
+    console.log("In controller");
+    console.log(io);
+    io.emit("taskAssigned", { taskId });
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error("Error assigning task:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+// Unassign a task from a user
+const unassignTask = async (req, res) => {
+  try {
+    const { taskId } = req.params;
+
+    const updatedTask = await prisma.task.update({
+      where: { id: Number(taskId) },
+      data: { assignedUserId: null },
+    });
+
+    res.status(200).json(updatedTask);
+  } catch (error) {
+    console.error("Error unassigning task:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
 // Validate task creation data
 const validateTaskCreation = (req, res, next) => {
   const { title } = req.body;
@@ -195,4 +260,6 @@ module.exports = {
   uploadAttachment,
   getAttachmentById,
   deleteAttachmentById,
+  assignTask,
+  unassignTask,
 };

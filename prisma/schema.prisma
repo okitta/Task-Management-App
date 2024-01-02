@@ -20,7 +20,9 @@ model User {
   role           String           @default("user")
   ownedProjects  Project[]
   projectMembers ProjectMembers[]
-  tasks          Task[] 
+  tasks          Task[]           @relation("AllTasks")
+  createdTasks   Task[]           @relation("CreatedBy")
+  assignedTasks  Task[]           @relation("AssignedTo")
 }
 
 // Define the Project model
@@ -47,17 +49,20 @@ model ProjectMembers {
 
 // Define the Task model
 model Task {
-  id          Int          @id @default(autoincrement())
-  title       String
-  description String?
-  due_date    DateTime?
-  completed   Boolean      @default(false)
-  project_id  Int
-  user_id     Int
-  created_at  DateTime     @default(now())
-  user        User         @relation(fields: [user_id], references: [id])
-  project     Project      @relation(fields: [project_id], references: [id])
-  attachments Attachment[]
+  id             Int          @id @default(autoincrement())
+  title          String
+  description    String?
+  due_date       DateTime?
+  completed      Boolean      @default(false)
+  project_id     Int
+  created_at     DateTime     @default(now())
+  project        Project      @relation(fields: [project_id], references: [id])
+  attachments    Attachment[]
+  user_id        Int
+  user           User         @relation(fields: [user_id], references: [id], name: "CreatedBy")
+  assignedUser   User?        @relation(fields: [assignedUserId], references: [id], name: "AssignedTo")
+  assignedUserId Int?
+  users          User[]       @relation("AllTasks")
 }
 
 // Define the Attachment model
