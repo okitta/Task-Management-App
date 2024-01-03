@@ -1,6 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+//const { PrismaClient } = require("@prisma/client");
+//const prisma = new PrismaClient();
+const { prisma } = require("../utils/prisma");
 
 // Get list of Projects of the current user
 async function getAllProjects(req, res) {

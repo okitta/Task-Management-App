@@ -1,7 +1,8 @@
 const path = require("path");
 const fs = require("fs");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+//const { PrismaClient } = require("@prisma/client");
+//const prisma = new PrismaClient();
+const { prisma } = require("../utils/prisma");
 
 // Upload attachment to a specific task route
 const uploadAttachment = async (req, res) => {

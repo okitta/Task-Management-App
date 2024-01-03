@@ -1,6 +1,7 @@
 const { exclude } = require("../utils/miscUtils");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+//const { PrismaClient } = require("@prisma/client");
+//const prisma = new PrismaClient();
+const { prisma } = require("../utils/prisma");
 
 async function getUserProfile(req, res) {
   const userId = req.user.id;

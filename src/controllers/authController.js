@@ -1,10 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
+//const { PrismaClient } = require("@prisma/client");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 require("dotenv").config();
 const { generateToken } = require("../utils/authUtils");
-
-const prisma = new PrismaClient();
+const { prisma } = require("../utils/prisma");
+//const prisma = new PrismaClient();
 
 //Temp: Get list of users
 async function getUsers(req, res) {
